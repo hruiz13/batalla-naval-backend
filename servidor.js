@@ -10,7 +10,7 @@ const servidor = http.createServer(app);
 app.use(cors());
 const io = socketio(servidor, {
     cors: {
-        origin: "URL_ORIGEN",
+        origin: process.env.URL_ORIGEN,
         methods: ["GET", "POST"],
         allowedHeaders: ["my-custom-header"],
         credentials: true
@@ -24,6 +24,7 @@ app.get('/', (req, res) => {
 let salas = []
 
 io.on('connection', socket => {
+
 
     //cada que alguien entre esto se ejecuta.
     socket.on('conectado', (datos) => {
