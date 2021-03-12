@@ -99,7 +99,7 @@ io.on('connection', socket => {
 
         salas[SALA].turno = !salas[SALA].turno
 
-        console.log("Turno: ", salas[SALA].turno)
+        //console.log("Turno: ", salas[SALA].turno)
 
 
         if (listo) {
