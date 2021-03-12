@@ -2,7 +2,7 @@ const express = require('express');
 const socketio = require('socket.io');
 const http = require('http');
 const cors = require('cors');
-const e = require('cors');
+require('dotenv').config();
 
 const app = express();
 const servidor = http.createServer(app);
@@ -10,7 +10,7 @@ const servidor = http.createServer(app);
 app.use(cors());
 const io = socketio(servidor, {
     cors: {
-        origin: "http://192.168.3.221:3000",
+        origin: "URL_ORIGEN",
         methods: ["GET", "POST"],
         allowedHeaders: ["my-custom-header"],
         credentials: true
@@ -33,27 +33,35 @@ io.on('connection', socket => {
         //console.log("Sala antes de: ", salas)
         console.log("Cantidad de salas: " + salas.length)
         if (salas.length === 0) {
-            console.log("Crea la primera sala")
+            //console.log("Crea la primera sala")
             salas.push({ id: sala, playerA: nick, dos: false, turno: true })
         } else {
             let encuentra = false
             salas.forEach((salon, index) => {
                 if (salon.id === sala) {
-                    console.log("Entrando a sala existente")
+                    //console.log("Entrando a sala existente")
                     SALA = index
                     encuentra = true
                 }
             })
             if (!encuentra) {
-                console.log("Crea una sala nueva B")
+                //console.log("Crea una sala nueva B")
                 salas.push({ id: sala, playerA: nick, dos: false, turno: true })
                 SALA = salas.length - 1
             } else {
                 if (salas[SALA].playerB) {
-                    console.log("Solo pueden haber 2 jugadores.")
+                    //console.log("Solo pueden haber 2 jugadores.")
+                    io.to(socket.id).emit("sala", {
+                        noEntras: true
+                    });
                 } else {
                     salas[SALA].playerB = nick
                     salas[SALA].dos = true
+                    //mensaje para mi mismo?
+                    io.to(socket.id).emit("sala", {
+                        quien: salas[SALA].playerA,
+                        mismo: "mismo"
+                    });
                 }
             }
 
@@ -65,6 +73,7 @@ io.on('connection', socket => {
 
         socket.to(sala).emit("sala", {
             dos: salas[SALA].dos,
+            quien: nick,
             turno: true
         })
 
@@ -93,33 +102,34 @@ io.on('connection', socket => {
 
 
         if (listo) {
-            console.log("listo")
+            //console.log("listo")
             salas[SALA].turno = true
             socket.to(sala).emit("sala", {
                 listo: true,
                 turno: salas[SALA].turno
             })
         } else if (destruido) {
-            console.log("destruido")
+            //console.log("destruido")
+            salas[SALA].turno = !salas[SALA].turno
             socket.to(sala).emit("sala", {
                 destruido,
                 turno: salas[SALA].turno
             })
         } else if (fire) {
-            console.log("fire", fire)
+            //console.log("fire", fire)
             socket.to(sala).emit("sala", {
                 fire,
                 turno: salas[SALA].turno
             })
         } else if (afecta) {
 
-            console.log("afecta")
+            //console.log("afecta")
             socket.to(sala).emit("sala", {
                 afecta,
                 turno: salas[SALA].turno
             })
         } else if (fin) {
-            console.log("fin")
+            //console.log("fin")
             socket.to(sala).emit("sala", {
                 fin,
                 turno: salas[SALA].turno
@@ -135,6 +145,6 @@ io.on('connection', socket => {
 
 });
 
-servidor.listen(3001, () => {
-    console.log("Servidor inicializado");
+servidor.listen(process.env.PORT, () => {
+    console.log("Servidor inicializado en puerto " + process.env.PORT);
 })
